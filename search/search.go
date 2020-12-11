@@ -1,6 +1,7 @@
 package search
 
 import (
+	"math/rand"
 	"os"
 	"path/filepath"
 )
@@ -11,6 +12,10 @@ func GetFiles(recursive bool) ([]*File, error) {
 	}
 
 	return getNonRecursiveFiles()
+}
+
+func PickFile(files []*File) *File {
+	return files[rand.Intn(len(files)-1)]
 }
 
 func getRecursiveFiles() ([]*File, error) {

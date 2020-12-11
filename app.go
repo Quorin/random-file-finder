@@ -8,31 +8,36 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, world!")
-
 	recursive := false
 	_ = survey.AskOne(&survey.Confirm{
 		Message: "Recursive search?",
 	}, &recursive)
-
-	reload := false
-	_ = survey.AskOne(&survey.Confirm{
-		Message: "Reload?",
-	}, &reload)
-
-	open := true
-	_ = survey.AskOne(&survey.Confirm{
-		Message: "Open?",
-		Default: true,
-	}, &open)
 
 	files, err := search.GetFiles(recursive)
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	for i, file := range files {
-		fmt.Println("i:", i, " file:", file)
+	var pick *search.File
+
+	for {
+		pick = search.PickFile(files)
+		fmt.Println("File:", pick.Name)
+
+		reload := false
+		_ = survey.AskOne(&survey.Confirm{
+			Message: "Reload?",
+			Default: false,
+		}, &reload)
+
+		if !reload {
+			break
+		}
 	}
 
+	open := true
+	_ = survey.AskOne(&survey.Confirm{
+		Message: "Open?",
+		Default: true,
+	}, &open)
 }
