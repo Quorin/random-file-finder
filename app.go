@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
+	"os"
+	"random-file-finder/search"
 )
 
 func main() {
@@ -23,5 +25,14 @@ func main() {
 		Message: "Open?",
 		Default: true,
 	}, &open)
+
+	files, err := search.GetFiles(recursive)
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+	}
+
+	for i, file := range files {
+		fmt.Println("i:", i, " file:", file)
+	}
 
 }
