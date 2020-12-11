@@ -2,4 +2,7 @@ module random-file-finder
 
 go 1.15
 
-require github.com/AlecAivazis/survey/v2 v2.2.4
+require (
+	github.com/AlecAivazis/survey/v2 v2.2.4
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
+)

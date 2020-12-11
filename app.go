@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/skratchdot/open-golang/open"
 	"os"
 	"random-file-finder/search"
 )
@@ -35,9 +36,16 @@ func main() {
 		}
 	}
 
-	open := true
+	openFile := true
 	_ = survey.AskOne(&survey.Confirm{
 		Message: "Open?",
 		Default: true,
-	}, &open)
+	}, &openFile)
+
+	if openFile {
+		err = open.Run(pick.Path)
+		if err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err.Error())
+		}
+	}
 }
