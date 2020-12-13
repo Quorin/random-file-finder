@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var (
@@ -26,6 +27,7 @@ func PickFile(files []*File) *File {
 	if len(files) == 1 {
 		return files[0]
 	}
+	rand.Seed(time.Now().UnixNano())
 	return files[rand.Intn(len(files)-1)]
 }
 
