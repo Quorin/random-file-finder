@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -85,7 +84,7 @@ func getRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
 		}
 
 		if len(pattern) > 0 {
-			if ok, _ := regexp.Match(strings.ToLower(pattern), []byte(strings.ToLower(fp))); !ok {
+			if !strings.Contains(strings.ToLower(fp), strings.ToLower(pattern)) {
 				return nil
 			}
 		}
@@ -123,7 +122,7 @@ func getNonRecursiveFiles(extensions []string, pattern string) ([]*File, error) 
 		}
 
 		if len(pattern) > 0 {
-			if ok, _ := regexp.Match(strings.ToLower(pattern), []byte(strings.ToLower(s.Name()))); !ok {
+			if !strings.Contains(strings.ToLower(s.Name()), strings.ToLower(pattern)) {
 				continue
 			}
 		}

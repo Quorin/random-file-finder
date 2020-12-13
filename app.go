@@ -30,18 +30,18 @@ func main() {
 		return
 	}
 
-	var regexp string
+	var pattern string
 
 	if err := survey.AskOne(&survey.Input{
-		Message: "Regexp?",
+		Message: "File name pattern?",
 		Default: "",
 		Help:    "Leave empty if not needed",
-	}, &regexp); err != nil {
+	}, &pattern); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 		return
 	}
 
-	files, err := search.GetFiles(recursive, search.ParseExtensions(extensions), regexp)
+	files, err := search.GetFiles(recursive, search.ParseExtensions(extensions), pattern)
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 		return
