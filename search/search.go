@@ -1,6 +1,7 @@
 package search
 
 import (
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -26,6 +27,10 @@ func getRecursiveFiles() ([]*File, error) {
 			return err
 		}
 
+		if info.IsDir() {
+			return nil
+		}
+
 		files = append(files, &File{
 			Path: filepath,
 			Name: info.Name(),
@@ -44,15 +49,19 @@ func getRecursiveFiles() ([]*File, error) {
 func getNonRecursiveFiles() ([]*File, error) {
 	var files []*File
 
-	dir, err := filepath.Glob("*")
+	dir, err := ioutil.ReadDir(".")
 	if err != nil {
 		return nil, err
 	}
 
 	for _, s := range dir {
+		if s.IsDir() {
+			continue
+		}
+
 		files = append(files, &File{
-			Path: s,
-			Name: s,
+			Path: s.Name(),
+			Name: s.Name(),
 		})
 	}
 

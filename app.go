@@ -43,9 +43,8 @@ func main() {
 	}, &openFile)
 
 	if openFile {
-		err = open.Run(pick.Path)
-		if err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, err.Error())
+		if err := open.Run(pick.Path); err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, "cannot open file")
 		}
 	}
 }
