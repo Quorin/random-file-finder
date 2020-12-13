@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/skratchdot/open-golang/open"
@@ -10,13 +11,19 @@ import (
 )
 
 func main() {
-	var recursive bool
+	err := run()
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+	}
+}
+
+func run() error {
+	config := &search.Config{}
 
 	if err := survey.AskOne(&survey.Confirm{
 		Message: "Recursive search?",
-	}, &recursive); err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err.Error())
-		return
+	}, &config.Recursive); err != nil {
+		return err
 	}
 
 	var extensions string
@@ -26,58 +33,63 @@ func main() {
 		Default: strings.Join(search.DefaultExtensions, " "),
 		Help:    "Provide file extensions separated by space",
 	}, &extensions); err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err.Error())
-		return
+		return err
 	}
-
-	var pattern string
 
 	if err := survey.AskOne(&survey.Input{
 		Message: "File name pattern?",
 		Default: "",
 		Help:    "Leave empty if not needed",
-	}, &pattern); err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err.Error())
-		return
+	}, &config.Pattern); err != nil {
+		return err
 	}
 
-	files, err := search.GetFiles(recursive, search.ParseExtensions(extensions), pattern)
+	config.Extensions = search.ParseExtensions(extensions)
+
+	files, err := search.GetFiles(config)
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err.Error())
-		return
+		return err
 	}
 
 	if len(files) == 0 {
-		_, _ = fmt.Fprintln(os.Stderr, "not found files with provided settings")
-		return
+		return errors.New("not found files with provided settings")
 	}
 
 	var pick *search.File
 
 	for {
 		pick = search.PickFile(files)
-		fmt.Println("File:", pick.Name)
+		fmt.Println("👀", pick.Name)
 
 		reload := false
-		_ = survey.AskOne(&survey.Confirm{
+		err := survey.AskOne(&survey.Confirm{
 			Message: "Reload?",
 			Default: false,
 		}, &reload)
+
+		if err != nil {
+			return err
+		}
 
 		if !reload {
 			break
 		}
 	}
 
-	openFile := true
-	_ = survey.AskOne(&survey.Confirm{
+	openFile := false
+	err = survey.AskOne(&survey.Confirm{
 		Message: "Open?",
 		Default: true,
 	}, &openFile)
 
+	if err != nil {
+		return err
+	}
+
 	if openFile {
 		if err := open.Run(pick.Path); err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, "cannot open file")
+			return errors.New("cannot open file")
 		}
 	}
+	return nil
 }

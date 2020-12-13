@@ -10,6 +10,7 @@ func SliceContain(slice []string, val string) bool {
 	return false
 }
 
+// FindAnyExtension returns true if extension meets the config assumptions
 func FindAnyExtension(extensions []string) bool {
 	if len(extensions) == 0 {
 		return false

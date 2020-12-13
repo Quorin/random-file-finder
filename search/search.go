@@ -11,27 +11,34 @@ import (
 
 var (
 	DefaultExtensions = []string{".mkv", ".mp4", ".mpeg", ".avi", ".mov", ".m4ts", ".wmv", ".flv", ".webm", ".mpg"}
-	Delimiter         = " "
+)
+
+const (
+	delimiter         = " "
 	AllExtensionsChar = "*"
 )
 
-func GetFiles(recursive bool, extensions []string, pattern string) ([]*File, error) {
-	if recursive {
-		return getRecursiveFiles(extensions, pattern)
+// GetFiles returns files depending on the configuration
+func GetFiles(config *Config) ([]*File, error) {
+	if config.Recursive {
+		return getRecursiveFiles(config)
 	}
 
-	return getNonRecursiveFiles(extensions, pattern)
+	return getNonRecursiveFiles(config)
 }
 
+// PickFile returns random file
 func PickFile(files []*File) *File {
 	if len(files) == 1 {
 		return files[0]
 	}
+
 	rand.Seed(time.Now().UnixNano())
 	return files[rand.Intn(len(files)-1)]
 }
 
 func ParseExtensions(extensions string) []string {
+	// if no provided extensions then return default
 	if len(extensions) == 0 {
 		return DefaultExtensions
 	}
@@ -41,8 +48,9 @@ func ParseExtensions(extensions string) []string {
 		return []string{AllExtensionsChar}
 	}
 
-	var exts []string
-	split := strings.Split(extensions, Delimiter)
+	// split extensions by delimiter
+	var parsedExtensions []string
+	split := strings.Split(extensions, delimiter)
 
 	for _, s := range split {
 		// trim unneeded character
@@ -58,18 +66,19 @@ func ParseExtensions(extensions string) []string {
 			continue
 		}
 
-		exts = append(exts, e)
+		parsedExtensions = append(parsedExtensions, e)
 	}
 
-	// if every extension is incorrect then return defautl extensions
-	if len(exts) == 0 {
+	// if every extension is incorrect then return default extensions
+	if len(parsedExtensions) == 0 {
 		return DefaultExtensions
 	}
 
-	return exts
+	return parsedExtensions
 }
 
-func getRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
+// getRecursiveFiles returns all files in current directory and all subdirectories (recursively)
+func getRecursiveFiles(config *Config) ([]*File, error) {
 	var files []*File
 
 	err := filepath.Walk(".", func(fp string, info os.FileInfo, err error) error {
@@ -77,16 +86,19 @@ func getRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
 			return err
 		}
 
+		// return only files
 		if info.IsDir() {
 			return nil
 		}
 
-		if !FindAnyExtension(extensions) && !SliceContain(extensions, filepath.Ext(info.Name())) {
+		// check extensions
+		if !FindAnyExtension(config.Extensions) && !SliceContain(config.Extensions, filepath.Ext(info.Name())) {
 			return nil
 		}
 
-		if len(pattern) > 0 {
-			if !strings.Contains(strings.ToLower(filepath.Base(fp)), strings.ToLower(pattern)) {
+		// check pattern
+		if len(config.Pattern) > 0 {
+			if !strings.Contains(strings.ToLower(filepath.Base(fp)), strings.ToLower(config.Pattern)) {
 				return nil
 			}
 		}
@@ -96,9 +108,11 @@ func getRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
 			Name: info.Name(),
 		})
 
+		// return nil if everything is correct
 		return nil
 	})
 
+	// return error if filepath.Walk failed
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +120,8 @@ func getRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
 	return files, nil
 }
 
-func getNonRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
+// getNonRecursiveFiles returns all files in current directory
+func getNonRecursiveFiles(config *Config) ([]*File, error) {
 	var files []*File
 
 	dir, err := ioutil.ReadDir(".")
@@ -115,20 +130,24 @@ func getNonRecursiveFiles(extensions []string, pattern string) ([]*File, error) 
 	}
 
 	for _, s := range dir {
+		// return only files
 		if s.IsDir() {
 			continue
 		}
 
-		if !FindAnyExtension(extensions) && !SliceContain(extensions, filepath.Ext(s.Name())) {
+		// check extensions
+		if !FindAnyExtension(config.Extensions) && !SliceContain(config.Extensions, filepath.Ext(s.Name())) {
 			continue
 		}
 
-		if len(pattern) > 0 {
-			if !strings.Contains(strings.ToLower(s.Name()), strings.ToLower(pattern)) {
+		// check patterns
+		if len(config.Pattern) > 0 {
+			if !strings.Contains(strings.ToLower(s.Name()), strings.ToLower(config.Pattern)) {
 				continue
 			}
 		}
 
+		// path is not needed, because file is inside current directory
 		files = append(files, &File{
 			Path: s.Name(),
 			Name: s.Name(),
