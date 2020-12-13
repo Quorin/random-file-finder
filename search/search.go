@@ -84,7 +84,7 @@ func getRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
 		}
 
 		if len(pattern) > 0 {
-			if !strings.Contains(strings.ToLower(fp), strings.ToLower(pattern)) {
+			if !strings.Contains(strings.ToLower(filepath.Base(fp)), strings.ToLower(pattern)) {
 				return nil
 			}
 		}
