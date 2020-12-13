@@ -6,17 +6,40 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"os"
 	"random-file-finder/search"
+	"strings"
 )
 
 func main() {
-	recursive := false
-	_ = survey.AskOne(&survey.Confirm{
-		Message: "Recursive search?",
-	}, &recursive)
+	// TODO regex matching (optional)
+	var recursive bool
 
-	files, err := search.GetFiles(recursive)
+	if err := survey.AskOne(&survey.Confirm{
+		Message: "Recursive search?",
+	}, &recursive); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+		return
+	}
+
+	var extensions string
+
+	if err := survey.AskOne(&survey.Input{
+		Message: "File extensions?",
+		Default: strings.Join(search.DefaultExtensions, " "),
+		Help:    "Provide file extensions separated by space",
+	}, &extensions); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+		return
+	}
+
+	files, err := search.GetFiles(recursive, search.ParseExtensions(extensions))
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+		return
+	}
+
+	if len(files) == 0 {
+		_, _ = fmt.Fprintln(os.Stderr, "not found files with provided settings")
+		return
 	}
 
 	var pick *search.File
