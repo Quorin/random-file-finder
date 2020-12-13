@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-	// TODO regex matching (optional)
 	var recursive bool
 
 	if err := survey.AskOne(&survey.Confirm{
@@ -31,7 +30,18 @@ func main() {
 		return
 	}
 
-	files, err := search.GetFiles(recursive, search.ParseExtensions(extensions))
+	var regexp string
+
+	if err := survey.AskOne(&survey.Input{
+		Message: "Regexp?",
+		Default: "",
+		Help:    "Leave empty if not needed",
+	}, &regexp); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
+		return
+	}
+
+	files, err := search.GetFiles(recursive, search.ParseExtensions(extensions), regexp)
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 		return

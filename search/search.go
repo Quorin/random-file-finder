@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -14,12 +15,12 @@ var (
 	AllExtensionsChar = "*"
 )
 
-func GetFiles(recursive bool, extensions []string) ([]*File, error) {
+func GetFiles(recursive bool, extensions []string, pattern string) ([]*File, error) {
 	if recursive {
-		return getRecursiveFiles(extensions)
+		return getRecursiveFiles(extensions, pattern)
 	}
 
-	return getNonRecursiveFiles(extensions)
+	return getNonRecursiveFiles(extensions, pattern)
 }
 
 func PickFile(files []*File) *File {
@@ -67,7 +68,7 @@ func ParseExtensions(extensions string) []string {
 	return exts
 }
 
-func getRecursiveFiles(extensions []string) ([]*File, error) {
+func getRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
 	var files []*File
 
 	err := filepath.Walk(".", func(fp string, info os.FileInfo, err error) error {
@@ -81,6 +82,12 @@ func getRecursiveFiles(extensions []string) ([]*File, error) {
 
 		if !FindAnyExtension(extensions) && !SliceContain(extensions, filepath.Ext(info.Name())) {
 			return nil
+		}
+
+		if len(pattern) > 0 {
+			if ok, _ := regexp.Match(strings.ToLower(pattern), []byte(strings.ToLower(fp))); !ok {
+				return nil
+			}
 		}
 
 		files = append(files, &File{
@@ -98,7 +105,7 @@ func getRecursiveFiles(extensions []string) ([]*File, error) {
 	return files, nil
 }
 
-func getNonRecursiveFiles(extensions []string) ([]*File, error) {
+func getNonRecursiveFiles(extensions []string, pattern string) ([]*File, error) {
 	var files []*File
 
 	dir, err := ioutil.ReadDir(".")
@@ -113,6 +120,12 @@ func getNonRecursiveFiles(extensions []string) ([]*File, error) {
 
 		if !FindAnyExtension(extensions) && !SliceContain(extensions, filepath.Ext(s.Name())) {
 			continue
+		}
+
+		if len(pattern) > 0 {
+			if ok, _ := regexp.Match(strings.ToLower(pattern), []byte(strings.ToLower(s.Name()))); !ok {
+				continue
+			}
 		}
 
 		files = append(files, &File{
