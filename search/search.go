@@ -20,6 +20,8 @@ const (
 
 // GetFiles returns files depending on the configuration
 func GetFiles(config *Config) ([]*File, error) {
+	rand.Seed(time.Now().UnixNano())
+
 	if config.Recursive {
 		return getRecursiveFiles(config)
 	}
@@ -33,7 +35,6 @@ func PickFile(files []*File) *File {
 		return files[0]
 	}
 
-	rand.Seed(time.Now().UnixNano())
 	return files[rand.Intn(len(files)-1)]
 }
 
